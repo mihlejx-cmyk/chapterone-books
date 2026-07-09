@@ -1,0 +1,17 @@
+'use client';
+import { Suspense, useMemo, useState } from 'react';
+import { SlidersHorizontal } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { books, categories } from '@/lib/data';
+import { BookCard } from '@/components/book-card';
+import { SectionHeading } from '@/components/ui';
+import { MotionIn } from '@/components/motion-in';
+
+function ShopResults() {
+  const searchParams = useSearchParams(); const initial = searchParams.get('category') ?? 'All books';
+  const [category, setCategory] = useState(initial); const [sort, setSort] = useState('Featured'); const [filterOpen, setFilterOpen] = useState(false);
+  const filtered = useMemo(() => { const list = category === 'All books' ? books : books.filter((book) => book.genre === category); return [...list].sort((a, b) => sort === 'Price: low to high' ? (a.salePrice ?? a.price) - (b.salePrice ?? b.price) : sort === 'Newest' ? Number(b.published) - Number(a.published) : a.title.localeCompare(b.title)); }, [category, sort]);
+  return <main className="mx-auto max-w-[1440px] px-5 py-12 md:px-10 md:py-20"><SectionHeading eyebrow="The collection" title="Shop all books" copy="A considered catalogue of books worth making space for." /><div className="mt-10 flex flex-col gap-5 border-y border-line py-4 md:flex-row md:items-center md:justify-between"><div className="flex flex-wrap gap-2"><button onClick={() => setCategory('All books')} className={`rounded-full px-4 py-2 text-xs ${category === 'All books' ? 'bg-ink text-white' : 'border border-line hover:border-ink'}`}>All books</button>{categories.map((item) => <button key={item.name} onClick={() => setCategory(item.name)} className={`rounded-full px-4 py-2 text-xs ${category === item.name ? 'bg-ink text-white' : 'border border-line hover:border-ink'}`}>{item.name}</button>)}</div><div className="flex items-center justify-between gap-3"><span className="text-xs text-ink/50">{filtered.length} showing</span><button onClick={() => setFilterOpen(!filterOpen)} className="inline-flex items-center gap-2 text-xs font-semibold"><SlidersHorizontal size={15} /> Filters</button><select value={sort} onChange={(e) => setSort(e.target.value)} className="rounded-full border border-line bg-white px-3 py-2 text-xs outline-none"><option>Featured</option><option>Newest</option><option>Price: low to high</option><option>Alphabetical</option></select></div></div>{filterOpen && <div className="grid gap-5 border-b border-line py-6 md:grid-cols-3"><label className="text-xs">Price range<select className="mt-2 block w-full rounded-lg border border-line bg-white p-3 text-sm"><option>Any price</option><option>Under R300</option><option>R300 – R500</option></select></label><label className="text-xs">Rating<select className="mt-2 block w-full rounded-lg border border-line bg-white p-3 text-sm"><option>Any rating</option><option>4 stars & up</option><option>4.5 stars & up</option></select></label><label className="text-xs">Availability<select className="mt-2 block w-full rounded-lg border border-line bg-white p-3 text-sm"><option>All books</option><option>In stock</option><option>eBooks</option></select></label></div>}<div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-12 md:grid-cols-3 md:gap-x-7 lg:grid-cols-4">{filtered.map((book, i) => <MotionIn key={book.id} delay={i * .025}><BookCard book={book} /></MotionIn>)}</div></main>;
+}
+
+export default function ShopPage() { return <Suspense fallback={<main className="mx-auto max-w-[1440px] px-5 py-20">Loading shop…</main>}><ShopResults /></Suspense>; }
